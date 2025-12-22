@@ -121,4 +121,50 @@ class DoctorController extends Controller
         }
     }
 
+    public function updateProfile(Request $request, $id)
+    {
+        try {
+            $doctor = Doctor::findOrFail($id);
+
+            if ($request->hasFile('photo')) {
+                // Delete old photo if exists
+                if ($doctor->photo && \Storage::disk('public')->exists($doctor->photo)) {
+                    \Storage::disk('public')->delete($doctor->photo);
+                }
+                $path = $request->file('photo')->store('profile_photos', 'public');
+                $doctor->photo = $path;
+            }
+
+            $fields = [
+                'full_name',
+                'phone',
+                'email',
+                'designation',
+                'specialization',
+                'qualification',
+                'experience',
+                'bmdc_no',
+                'visiting_hours',
+                'visiting_days',
+                'affiliated_clinic',
+                'description'
+            ];
+
+            foreach ($fields as $field) {
+                if ($request->has($field)) {
+                    $doctor->$field = $request->input($field);
+                }
+            }
+
+            $doctor->save();
+
+            return response()->json([
+                'message' => 'Profile updated successfully',
+                'doctor' => $doctor
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Update failed: ' . $e->getMessage()], 500);
+        }
+    }
 }

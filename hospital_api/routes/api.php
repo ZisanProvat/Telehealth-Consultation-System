@@ -36,6 +36,7 @@ Route::get('patients/{id}', [PatientController::class, 'show']);
 
 Route::post('doctor/login', [DoctorController::class, 'login']);
 Route::post('doctor/update-password', [DoctorController::class, 'updatePassword']);
+Route::post('doctors/{id}/update-profile', [DoctorController::class, 'updateProfile']);
 Route::post('doctors', [DoctorController::class, 'store']);
 Route::get('doctors', [DoctorController::class, 'index']);
 Route::get('doctors/{id}', [DoctorController::class, 'show']);
@@ -43,6 +44,7 @@ Route::get('doctors/{id}', [DoctorController::class, 'show']);
 // Appointment routes
 Route::get('appointments', [AppointmentController::class, 'index']);
 Route::get('appointments/patient/{patientId}', [AppointmentController::class, 'getPatientAppointments']);
+Route::get('appointments/doctor/{doctorId}', [AppointmentController::class, 'getDoctorAppointments']);
 Route::post('appointments', [AppointmentController::class, 'store']);
 Route::put('appointments/{id}', [AppointmentController::class, 'update']);
 Route::delete('appointments/{id}', [AppointmentController::class, 'destroy']);

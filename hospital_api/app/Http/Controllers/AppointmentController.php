@@ -21,6 +21,13 @@ class AppointmentController extends Controller
         return response()->json($appointments, 200);
     }
 
+    // GET appointments for a specific doctor
+    public function getDoctorAppointments($doctorId)
+    {
+        $appointments = Appointment::where('doctor_id', $doctorId)->get();
+        return response()->json($appointments, 200);
+    }
+
     // POST create appointment
     public function store(Request $request)
     {
