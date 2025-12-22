@@ -25,28 +25,43 @@ class AppointmentController extends Controller
     public function store(Request $request)
     {
         try {
+            $doctorId = $request->input('doctor_id');
+            $date = $request->input('appointment_date');
+
+            // 1. Check existing appointments for this doctor on this date
+            $existingCount = Appointment::where('doctor_id', $doctorId)
+                ->where('appointment_date', $date)
+                ->count();
+
+            // 2. Enforce 50 patient limit
+            if ($existingCount >= 50) {
+                return response()->json([
+                    'message' => 'This doctor has reached the maximum limit of 50 patients for this day.'
+                ], 422);
+            }
+
             $appointment = new Appointment();
-            
+
             // Doctor information
-            $appointment->doctor_id = $request->input('doctor_id');
+            $appointment->doctor_id = $doctorId;
             $appointment->doctor_name = $request->input('doctor_name');
-            
+
             // Patient information
             $appointment->patient_id = $request->input('patient_id');
             $appointment->patient_name = $request->input('patient_name');
-            
+
             // Appointment details
-            $appointment->appointment_date = $request->input('appointment_date');
-            $appointment->appointment_time = $request->input('appointment_time');
+            $appointment->appointment_date = $date;
+            $appointment->serial_number = $existingCount + 1; // Assign automatic serial
             $appointment->day = $request->input('day'); // Day of week
             $appointment->reason = $request->input('reason');
             $appointment->notes = $request->input('notes');
             $appointment->status = $request->input('status', 'scheduled');
-            
+
             $appointment->save();
-            
+
             return response()->json([
-                'message' => 'Appointment booked successfully',
+                'message' => 'Appointment booked successfully. Your serial number is ' . $appointment->serial_number,
                 'data' => $appointment
             ], 201);
         } catch (\Exception $e) {
@@ -62,7 +77,7 @@ class AppointmentController extends Controller
     {
         try {
             $appointment = Appointment::findOrFail($id);
-            
+
             if ($request->has('doctor_id')) {
                 $appointment->doctor_id = $request->input('doctor_id');
             }
@@ -93,9 +108,9 @@ class AppointmentController extends Controller
             if ($request->has('status')) {
                 $appointment->status = $request->input('status');
             }
-            
+
             $appointment->save();
-            
+
             return response()->json([
                 'message' => 'Appointment updated successfully',
                 'data' => $appointment
@@ -114,7 +129,7 @@ class AppointmentController extends Controller
         try {
             $appointment = Appointment::findOrFail($id);
             $appointment->delete();
-            
+
             return response()->json([
                 'message' => 'Appointment deleted successfully'
             ], 200);
