@@ -11,9 +11,9 @@ class DoctorController extends Controller
     public function index()
     {
         $doctors = Doctor::all();
-        
+
         // Map database fields to frontend expected fields
-        return $doctors->map(function($doctor) {
+        return $doctors->map(function ($doctor) {
             return [
                 'id' => $doctor->id,
                 'name' => $doctor->full_name,
@@ -27,6 +27,7 @@ class DoctorController extends Controller
                 'bmdc_no' => $doctor->bmdc_no,
                 'visiting_hours' => $doctor->visiting_hours,
                 'visiting_days' => $doctor->visiting_days,
+                'affiliated_clinic' => $doctor->affiliated_clinic,
                 'description' => $doctor->description,
             ];
         });
@@ -35,7 +36,7 @@ class DoctorController extends Controller
     public function show($id)
     {
         $doctor = Doctor::findOrFail($id);
-        
+
         // Map database fields to frontend expected fields
         return [
             'id' => $doctor->id,
@@ -50,6 +51,7 @@ class DoctorController extends Controller
             'bmdc_no' => $doctor->bmdc_no,
             'visiting_hours' => $doctor->visiting_hours,
             'visiting_days' => $doctor->visiting_days,
+            'affiliated_clinic' => $doctor->affiliated_clinic,
             'description' => $doctor->description,
         ];
     }
@@ -69,13 +71,14 @@ class DoctorController extends Controller
         $doctor->bmdc_no = $req->input('bmdc_no');
         $doctor->visiting_hours = $req->input('visiting_hours');
         $doctor->visiting_days = $req->input('visiting_days');
+        $doctor->affiliated_clinic = $req->input('affiliated_clinic');
         $doctor->description = $req->input('description');
         $doctor->photo = $req->input('photo');
         $doctor->password = Hash::make($req->input('password'));
 
         $doctor->save();
 
-       return response()->json([
+        return response()->json([
             'message' => 'Doctor created successfully',
             'data' => $doctor
         ], 201);
@@ -85,12 +88,12 @@ class DoctorController extends Controller
     {
         $doctor = Doctor::where('email', $req->input('email'))->first();
         if (!$doctor || !Hash::check($req->input('password'), $doctor->password)) {
-             return response()->json(['message' => 'Invalid credentials'], 401);
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
-        
+
         // Add role to doctor object
         $doctor->role = 'doctor';
-        
+
         return response()->json([
             'doctor' => $doctor,
             'token' => 'doctor_token_' . $doctor->id,
@@ -102,20 +105,20 @@ class DoctorController extends Controller
     {
         try {
             $doctor = Doctor::findOrFail($req->input('doctor_id'));
-            
+
             // Verify old password
             if (!Hash::check($req->input('old_password'), $doctor->password)) {
                 return response()->json(['message' => 'Old password is incorrect'], 401);
             }
-            
+
             // Update password
             $doctor->password = Hash::make($req->input('new_password'));
             $doctor->save();
-            
+
             return response()->json(['message' => 'Password updated successfully'], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Failed to update password'], 500);
         }
     }
-    
+
 }
