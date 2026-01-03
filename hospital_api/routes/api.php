@@ -48,3 +48,25 @@ Route::get('appointments/doctor/{doctorId}', [AppointmentController::class, 'get
 Route::post('appointments', [AppointmentController::class, 'store']);
 Route::put('appointments/{id}', [AppointmentController::class, 'update']);
 Route::delete('appointments/{id}', [AppointmentController::class, 'destroy']);
+
+// Admin routes
+Route::post('admin/login', [\App\Http\Controllers\AdminController::class, 'login']);
+Route::get('admin/dashboard-stats', [\App\Http\Controllers\AdminController::class, 'getDashboardStats']);
+
+// Admin Patient Management
+Route::get('admin/patients', [\App\Http\Controllers\AdminController::class, 'getPatients']);
+Route::delete('admin/patients/{id}', [\App\Http\Controllers\AdminController::class, 'deletePatient']);
+Route::post('admin/patients', [\App\Http\Controllers\AdminController::class, 'storePatient']);
+Route::put('admin/patients/{id}', [\App\Http\Controllers\AdminController::class, 'updatePatient']);
+
+// Admin Doctor Management
+Route::get('admin/doctors', [\App\Http\Controllers\AdminController::class, 'getDoctors']);
+Route::post('admin/doctors', [\App\Http\Controllers\AdminController::class, 'storeDoctor']);
+Route::put('admin/doctors/{id}', [\App\Http\Controllers\AdminController::class, 'updateDoctor']);
+Route::delete('admin/doctors/{id}', [\App\Http\Controllers\AdminController::class, 'deleteDoctor']);
+
+// Admin Appointment Management
+Route::get('admin/appointments', [\App\Http\Controllers\AdminController::class, 'getAllAppointments']);
+Route::put('admin/appointments/{id}', [\App\Http\Controllers\AdminController::class, 'updateAppointmentStatus']);
+Route::delete('admin/appointments/{id}', [\App\Http\Controllers\AdminController::class, 'deleteAppointment']);
+

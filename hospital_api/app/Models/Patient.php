@@ -20,6 +20,7 @@ class Patient extends Model
         'height',
         'weight',
         'blood_group',
+        'gender',
         'previous_record',
         'uploaded_record',
         'photo',
