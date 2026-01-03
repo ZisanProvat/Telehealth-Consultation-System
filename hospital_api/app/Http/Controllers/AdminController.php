@@ -88,66 +88,78 @@ class AdminController extends Controller
 
     public function storePatient(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:patients',
-            'password' => 'required|min:6',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required',
+                'email' => 'required|email|unique:patients',
+                'password' => 'required|min:6',
+            ]);
 
-        $patient = new Patient();
-        $patient->name = $request->name;
-        $patient->email = $request->email;
-        $patient->password = Hash::make($request->password);
-        $patient->phone = $request->phone;
-        $patient->address = $request->address;
-        $patient->age = $request->age;
-        $patient->height = $request->height;
-        $patient->weight = $request->weight;
-        $patient->blood_group = $request->blood_group;
-        $patient->gender = $request->gender;
+            $patient = new Patient();
+            $patient->name = $request->name;
+            $patient->email = $request->email;
+            $patient->password = Hash::make($request->password);
+            $patient->phone = $request->phone;
+            $patient->address = $request->address;
+            $patient->age = $request->age ?: null;
+            $patient->height = $request->height ?: null;
+            $patient->weight = $request->weight ?: null;
+            $patient->blood_group = $request->blood_group;
+            $patient->gender = $request->gender;
 
-        if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('patients', 'public');
-            $patient->photo = $path;
+            // Set default values for other non-nullable fields
+            $patient->previous_record = 'no';
+            $patient->uploaded_record = null;
+
+            if ($request->hasFile('photo')) {
+                $path = $request->file('photo')->store('patients', 'public');
+                $patient->photo = $path;
+            }
+
+            $patient->save();
+
+            return response()->json(['message' => 'Patient added successfully', 'patient' => $patient], 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to add patient: ' . $e->getMessage()], 500);
         }
-
-        $patient->save();
-
-        return response()->json(['message' => 'Patient added successfully', 'patient' => $patient], 201);
     }
 
     public function updatePatient(Request $request, $id)
     {
-        $patient = Patient::find($id);
-        if (!$patient) {
-            return response()->json(['message' => 'Patient not found'], 404);
-        }
-
-        $patient->name = $request->name ?? $patient->name;
-        $patient->email = $request->email ?? $patient->email;
-        if ($request->password) {
-            $patient->password = Hash::make($request->password);
-        }
-        $patient->phone = $request->phone ?? $patient->phone;
-        $patient->address = $request->address ?? $patient->address;
-        $patient->age = $request->age ?? $patient->age;
-        $patient->height = $request->height ?? $patient->height;
-        $patient->weight = $request->weight ?? $patient->weight;
-        $patient->blood_group = $request->blood_group ?? $patient->blood_group;
-        $patient->gender = $request->gender ?? $patient->gender;
-
-        if ($request->hasFile('photo')) {
-            // Delete old photo if exists
-            if ($patient->photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($patient->photo)) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($patient->photo);
+        try {
+            $patient = Patient::find($id);
+            if (!$patient) {
+                return response()->json(['message' => 'Patient not found'], 404);
             }
-            $path = $request->file('photo')->store('patients', 'public');
-            $patient->photo = $path;
+
+            $patient->name = $request->name ?? $patient->name;
+            $patient->email = $request->email ?? $patient->email;
+            if ($request->password) {
+                $patient->password = Hash::make($request->password);
+            }
+            $patient->phone = $request->phone ?? $patient->phone;
+            $patient->address = $request->address ?? $patient->address;
+            $patient->age = $request->age ?: $patient->age;
+            $patient->height = $request->height ?: $patient->height;
+            $patient->weight = $request->weight ?: $patient->weight;
+            $patient->blood_group = $request->blood_group ?? $patient->blood_group;
+            $patient->gender = $request->gender ?? $patient->gender;
+
+            if ($request->hasFile('photo')) {
+                // Delete old photo if exists
+                if ($patient->photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($patient->photo)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($patient->photo);
+                }
+                $path = $request->file('photo')->store('patients', 'public');
+                $patient->photo = $path;
+            }
+
+            $patient->save();
+
+            return response()->json(['message' => 'Patient updated successfully', 'patient' => $patient], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to update patient: ' . $e->getMessage()], 500);
         }
-
-        $patient->save();
-
-        return response()->json(['message' => 'Patient updated successfully', 'patient' => $patient], 200);
     }
 
     // --- Doctor Management ---

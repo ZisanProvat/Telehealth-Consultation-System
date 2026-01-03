@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\PasswordResetController;
 use App\Models\User;
 use App\Models\Doctor;
 
@@ -69,4 +70,8 @@ Route::delete('admin/doctors/{id}', [\App\Http\Controllers\AdminController::clas
 Route::get('admin/appointments', [\App\Http\Controllers\AdminController::class, 'getAllAppointments']);
 Route::put('admin/appointments/{id}', [\App\Http\Controllers\AdminController::class, 'updateAppointmentStatus']);
 Route::delete('admin/appointments/{id}', [\App\Http\Controllers\AdminController::class, 'deleteAppointment']);
+
+// Password Reset Routes
+Route::post('forgot-password', [PasswordResetController::class, 'sendResetLink']);
+Route::post('reset-password', [PasswordResetController::class, 'reset']);
 
