@@ -1,0 +1,18 @@
+id                   NO         bigint(20) unsigned
+created_at           YES        timestamp
+updated_at           YES        timestamp
+user_id              YES        int(11)
+full_name            NO         varchar(150)
+email                NO         varchar(150)
+phone                YES        varchar(20)
+designation          YES        varchar(100)
+specialization       YES        varchar(100)
+qualification        YES        varchar(255)
+experience           YES        varchar(50)
+bmdc_no              YES        varchar(50)
+visiting_hours       YES        varchar(100)
+visiting_days        YES        varchar(100)
+affiliated_clinic    YES        varchar(150)
+description          YES        text
+photo                YES        varchar(255)
+password             NO         varchar(255)

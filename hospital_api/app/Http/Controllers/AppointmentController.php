@@ -24,7 +24,9 @@ class AppointmentController extends Controller
     // GET appointments for a specific doctor
     public function getDoctorAppointments($doctorId)
     {
-        $appointments = Appointment::where('doctor_id', $doctorId)->get();
+        $appointments = Appointment::with('patient:id,uploaded_record')
+            ->where('doctor_id', $doctorId)
+            ->get();
         return response()->json($appointments, 200);
     }
 
@@ -64,6 +66,11 @@ class AppointmentController extends Controller
             $appointment->reason = $request->input('reason');
             $appointment->notes = $request->input('notes');
             $appointment->status = $request->input('status', 'scheduled');
+
+            // Payment information
+            $appointment->payment_method = $request->input('payment_method');
+            $appointment->payment_status = $request->input('payment_status', 'pending');
+            $appointment->amount = $request->input('amount');
 
             $appointment->save();
 

@@ -29,6 +29,7 @@ class DoctorController extends Controller
                 'visiting_days' => $doctor->visiting_days,
                 'affiliated_clinic' => $doctor->affiliated_clinic,
                 'description' => $doctor->description,
+                'fees' => $doctor->fees,
             ];
         });
     }
@@ -53,6 +54,7 @@ class DoctorController extends Controller
             'visiting_days' => $doctor->visiting_days,
             'affiliated_clinic' => $doctor->affiliated_clinic,
             'description' => $doctor->description,
+            'fees' => $doctor->fees,
         ];
     }
     // POST store doctor
@@ -74,6 +76,7 @@ class DoctorController extends Controller
         $doctor->affiliated_clinic = $req->input('affiliated_clinic');
         $doctor->description = $req->input('description');
         $doctor->photo = $req->input('photo');
+        $doctor->fees = $req->input('fees');
         $doctor->password = Hash::make($req->input('password'));
 
         $doctor->save();
@@ -147,7 +150,8 @@ class DoctorController extends Controller
                 'visiting_hours',
                 'visiting_days',
                 'affiliated_clinic',
-                'description'
+                'description',
+                'fees'
             ];
 
             foreach ($fields as $field) {

@@ -170,52 +170,62 @@ class AdminController extends Controller
 
     public function storeDoctor(Request $request)
     {
-        $request->validate([
-            'full_name' => 'required',
-            'email' => 'required|email|unique:doctors',
-            'password' => 'required|min:6',
-        ]);
+        try {
+            $request->validate([
+                'full_name' => 'required',
+                'email' => 'required|email|unique:doctors',
+                'password' => 'required|min:6',
+            ]);
 
-        $doctor = new Doctor();
-        $doctor->full_name = $request->full_name;
-        $doctor->email = $request->email;
-        $doctor->password = Hash::make($request->password);
-        $doctor->phone = $request->phone;
-        $doctor->specialization = $request->specialization;
-        $doctor->qualification = $request->qualification;
-        $doctor->experience = $request->experience;
-        $doctor->designation = $request->designation;
-        $doctor->bmdc_no = $request->bmdc_no;
-        $doctor->visiting_days = $request->visiting_days;
-        $doctor->visiting_hours = $request->visiting_hours;
-        $doctor->save();
+            $doctor = new Doctor();
+            $doctor->full_name = $request->full_name;
+            $doctor->email = $request->email;
+            $doctor->password = Hash::make($request->password);
+            $doctor->phone = $request->phone;
+            $doctor->specialization = $request->specialization;
+            $doctor->qualification = $request->qualification;
+            $doctor->experience = $request->experience;
+            $doctor->designation = $request->designation;
+            $doctor->bmdc_no = $request->bmdc_no;
+            $doctor->visiting_days = $request->visiting_days;
+            $doctor->visiting_hours = $request->visiting_hours;
+            $doctor->fees = $request->fees;
+            $doctor->save();
 
-        return response()->json(['message' => 'Doctor added successfully', 'doctor' => $doctor], 201);
+            return response()->json(['message' => 'Doctor added successfully', 'doctor' => $doctor], 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to add doctor: ' . $e->getMessage()], 500);
+        }
     }
 
     public function updateDoctor(Request $request, $id)
     {
-        $doctor = Doctor::find($id);
-        if (!$doctor) {
-            return response()->json(['message' => 'Doctor not found'], 404);
-        }
+        try {
+            $doctor = Doctor::find($id);
+            if (!$doctor) {
+                return response()->json(['message' => 'Doctor not found'], 404);
+            }
 
-        $doctor->full_name = $request->full_name ?? $doctor->full_name;
-        $doctor->email = $request->email ?? $doctor->email;
-        if ($request->password) {
-            $doctor->password = Hash::make($request->password);
-        }
-        $doctor->phone = $request->phone ?? $doctor->phone;
-        $doctor->specialization = $request->specialization ?? $doctor->specialization;
-        $doctor->qualification = $request->qualification ?? $doctor->qualification;
-        $doctor->experience = $request->experience ?? $doctor->experience;
-        $doctor->designation = $request->designation ?? $doctor->designation;
-        $doctor->bmdc_no = $request->bmdc_no ?? $doctor->bmdc_no;
-        $doctor->visiting_days = $request->visiting_days ?? $doctor->visiting_days;
-        $doctor->visiting_hours = $request->visiting_hours ?? $doctor->visiting_hours;
-        $doctor->save();
+            $doctor->full_name = $request->full_name ?? $doctor->full_name;
+            $doctor->email = $request->email ?? $doctor->email;
+            if ($request->password) {
+                $doctor->password = Hash::make($request->password);
+            }
+            $doctor->phone = $request->phone ?? $doctor->phone;
+            $doctor->specialization = $request->specialization ?? $doctor->specialization;
+            $doctor->qualification = $request->qualification ?? $doctor->qualification;
+            $doctor->experience = $request->experience ?? $doctor->experience;
+            $doctor->designation = $request->designation ?? $doctor->designation;
+            $doctor->bmdc_no = $request->bmdc_no ?? $doctor->bmdc_no;
+            $doctor->visiting_days = $request->visiting_days ?? $doctor->visiting_days;
+            $doctor->visiting_hours = $request->visiting_hours ?? $doctor->visiting_hours;
+            $doctor->fees = $request->fees ?? $doctor->fees;
+            $doctor->save();
 
-        return response()->json(['message' => 'Doctor updated successfully', 'doctor' => $doctor], 200);
+            return response()->json(['message' => 'Doctor updated successfully', 'doctor' => $doctor], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to update doctor: ' . $e->getMessage()], 500);
+        }
     }
 
     public function deleteDoctor($id)

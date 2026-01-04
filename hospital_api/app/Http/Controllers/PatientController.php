@@ -91,7 +91,9 @@ class PatientController extends Controller
                     }
                 }
 
-                $path = $request->file('file')->store('health_records', 'public');
+                $file = $request->file('file');
+                $originalName = $file->getClientOriginalName();
+                $path = $file->storeAs('health_records/' . $id, $originalName, 'public');
                 $existingRecords[] = $path; // Append new file path
 
                 $patient->uploaded_record = json_encode($existingRecords);

@@ -26,7 +26,8 @@ class Doctor extends Model
         'affiliated_clinic',
         'description',
         'photo',
-        'password'
+        'password',
+        'fees'
     ];
 }
 

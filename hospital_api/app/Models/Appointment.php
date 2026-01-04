@@ -17,5 +17,13 @@ class Appointment extends Model
         'reason',
         'notes',
         'status',
+        'payment_method',
+        'payment_status',
+        'amount',
     ];
+
+    public function patient()
+    {
+        return $this->belongsTo(Patient::class, 'patient_id');
+    }
 }
