@@ -9,6 +9,7 @@ use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\SslCommerzPaymentController;
 use App\Models\User;
 use App\Models\Doctor;
 
@@ -80,4 +81,11 @@ Route::post('reset-password', [PasswordResetController::class, 'reset']);
 Route::post('feedback', [FeedbackController::class, 'store']);
 Route::get('admin/feedback', [FeedbackController::class, 'index']);
 Route::delete('admin/feedback/{id}', [FeedbackController::class, 'destroy']);
+
+// SSLCommerz Routes
+Route::post('pay', [SslCommerzPaymentController::class, 'index']);
+Route::post('success', [SslCommerzPaymentController::class, 'success'])->name('sslc.success');
+Route::post('fail', [SslCommerzPaymentController::class, 'fail'])->name('sslc.failure');
+Route::post('cancel', [SslCommerzPaymentController::class, 'cancel'])->name('sslc.cancel');
+Route::post('ipn', [SslCommerzPaymentController::class, 'ipn'])->name('sslc.ipn');
 

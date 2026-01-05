@@ -20,6 +20,12 @@ class Appointment extends Model
         'payment_method',
         'payment_status',
         'amount',
+        'transaction_id',
+        'payment_details',
+    ];
+
+    protected $casts = [
+        'payment_details' => 'array',
     ];
 
     public function patient()
