@@ -65,7 +65,7 @@ class AppointmentController extends Controller
             $appointment->day = $request->input('day'); // Day of week
             $appointment->reason = $request->input('reason');
             $appointment->notes = $request->input('notes');
-            $appointment->status = $request->input('status', 'scheduled');
+            $appointment->status = $request->input('status', 'pending_payment');
 
             // Payment information
             $appointment->payment_method = $request->input('payment_method');
