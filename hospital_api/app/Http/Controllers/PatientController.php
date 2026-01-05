@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Patient;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PatientVerificationMail;
 
 class PatientController extends Controller
 {
@@ -13,7 +16,7 @@ class PatientController extends Controller
         $req->validate([
             'name' => 'required|string|regex:/^[A-Z]/',
             'phone' => 'required|digits:11',
-            'email' => 'required|email|unique:patients,email',
+            'email' => 'required|email',
             'address' => 'required|string',
             'age' => 'required|numeric',
             'height' => 'required|numeric',
@@ -26,10 +29,22 @@ class PatientController extends Controller
             'phone.digits' => 'The phone number must be exactly 11 digits.',
         ]);
 
-        $patient = new Patient;
+        // Check if email exists but is not verified
+        $existingPatient = Patient::where('email', $req->input('email'))->first();
+
+        if ($existingPatient) {
+            if ($existingPatient->email_verified_at) {
+                return response()->json(['message' => 'The email has already been taken.'], 422);
+            }
+            // Overwrite existing unverified patient
+            $patient = $existingPatient;
+        } else {
+            $patient = new Patient;
+            $patient->email = $req->input('email');
+        }
+
         $patient->name = $req->input('name');
         $patient->phone = $req->input('phone');
-        $patient->email = $req->input('email');
         $patient->address = $req->input('address');
         $patient->age = $req->input('age');
         $patient->height = $req->input('height');
@@ -39,8 +54,24 @@ class PatientController extends Controller
         $patient->previous_record = $req->input('previous_record', 'no');
         $patient->uploaded_record = $req->input('uploaded_record');
         $patient->password = Hash::make($req->input('password'));
+
+        // Email Verification Logic
+        $patient->verification_token = Str::random(64);
+        $patient->email_verified_at = null;
+
         $patient->save();
-        return response()->json($patient, 201);
+
+        try {
+            Mail::to($patient->email)->send(new PatientVerificationMail($patient, $patient->verification_token));
+        } catch (\Exception $e) {
+            \Log::error("Mail sending failed: " . $e->getMessage());
+            // Continue registration but maybe warn? For now assume it works or log it.
+        }
+
+        return response()->json([
+            'message' => 'Registration successful! Please check your email to verify your account.',
+            'user' => $patient
+        ], 201);
     }
     public function login(Request $req)
     {
@@ -48,6 +79,10 @@ class PatientController extends Controller
         if (!$patient || !Hash::check($req->input('password'), $patient->password)) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
+
+        // if ($patient->email_verified_at === null) {
+        //     return response()->json(['message' => 'Please verify your email address before logging in.'], 403);
+        // }
 
         // Add role to patient object
         $patient->role = 'patient';
@@ -215,5 +250,30 @@ class PatientController extends Controller
         } catch (\Exception $e) {
             return response()->json(['message' => 'Password change failed: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function verifyPatientEmail(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string'
+        ]);
+
+        \Log::info("Verifying email with token: " . $request->token);
+        $patient = Patient::where('verification_token', $request->token)->first();
+
+        if (!$patient) {
+            \Log::error("Invalid token: " . $request->token);
+            return response()->json(['message' => 'Invalid or expired verification token.'], 400);
+        }
+
+        if ($patient->email_verified_at) {
+            return response()->json(['message' => 'Email already verified.'], 200);
+        }
+
+        $patient->email_verified_at = now();
+        // $patient->verification_token = null; // Keep token to allow re-verification checks
+        $patient->save();
+
+        return response()->json(['message' => 'Email verified successfully!'], 200);
     }
 }

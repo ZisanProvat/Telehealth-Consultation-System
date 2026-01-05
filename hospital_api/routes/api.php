@@ -36,6 +36,7 @@ Route::post('patients/{id}/update-profile', [PatientController::class, 'updatePr
 Route::post('patients/{id}/change-password', [PatientController::class, 'changePassword']);
 Route::delete('patients/{id}/health-records', [PatientController::class, 'deleteHealthRecord']);
 Route::get('patients/{id}', [PatientController::class, 'show']);
+Route::get('verify-email', [PatientController::class, 'verifyPatientEmail']);
 
 Route::post('doctor/login', [DoctorController::class, 'login']);
 Route::post('doctor/update-password', [DoctorController::class, 'updatePassword']);
@@ -88,4 +89,3 @@ Route::post('success', [SslCommerzPaymentController::class, 'success'])->name('s
 Route::post('fail', [SslCommerzPaymentController::class, 'fail'])->name('sslc.failure');
 Route::post('cancel', [SslCommerzPaymentController::class, 'cancel'])->name('sslc.cancel');
 Route::post('ipn', [SslCommerzPaymentController::class, 'ipn'])->name('sslc.ipn');
-
