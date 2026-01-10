@@ -10,6 +10,7 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\SslCommerzPaymentController;
+use App\Http\Controllers\DoctorReportController;
 use App\Models\User;
 use App\Models\Doctor;
 
@@ -56,6 +57,8 @@ Route::delete('appointments/{id}', [AppointmentController::class, 'destroy']);
 // Admin routes
 Route::post('admin/login', [\App\Http\Controllers\AdminController::class, 'login']);
 Route::get('admin/dashboard-stats', [\App\Http\Controllers\AdminController::class, 'getDashboardStats']);
+Route::post('admin/update-profile', [\App\Http\Controllers\AdminController::class, 'updateProfile']);
+Route::post('admin/change-password', [\App\Http\Controllers\AdminController::class, 'changePassword']);
 
 // Admin Patient Management
 Route::get('admin/patients', [\App\Http\Controllers\AdminController::class, 'getPatients']);
@@ -74,6 +77,15 @@ Route::get('admin/appointments', [\App\Http\Controllers\AdminController::class, 
 Route::put('admin/appointments/{id}', [\App\Http\Controllers\AdminController::class, 'updateAppointmentStatus']);
 Route::delete('admin/appointments/{id}', [\App\Http\Controllers\AdminController::class, 'deleteAppointment']);
 
+// Admin Payment Management
+Route::get('admin/payments', [\App\Http\Controllers\AdminController::class, 'getPaymentHistory']);
+
+// Doctor Monthly Reports (Admin only)
+Route::get('admin/reports/doctor/{doctorId}/monthly', [DoctorReportController::class, 'getMonthlyReport']);
+Route::get('admin/reports/doctors/monthly', [DoctorReportController::class, 'getAllDoctorsReport']);
+Route::get('admin/reports/doctor/{doctorId}/yearly', [DoctorReportController::class, 'getYearlyReport']);
+Route::post('admin/reports/generate', [DoctorReportController::class, 'generateMonthlyReport']);
+
 // Password Reset Routes
 Route::post('forgot-password', [PasswordResetController::class, 'sendResetLink']);
 Route::post('reset-password', [PasswordResetController::class, 'reset']);
@@ -89,3 +101,17 @@ Route::post('success', [SslCommerzPaymentController::class, 'success'])->name('s
 Route::post('fail', [SslCommerzPaymentController::class, 'fail'])->name('sslc.failure');
 Route::post('cancel', [SslCommerzPaymentController::class, 'cancel'])->name('sslc.cancel');
 Route::post('ipn', [SslCommerzPaymentController::class, 'ipn'])->name('sslc.ipn');
+
+Route::get('/debug-admin', function () {
+    $admins = \App\Models\Admin::all();
+    return response()->json([
+        'count' => $admins->count(),
+        'admins' => $admins->map(function ($admin) {
+            return [
+                'id' => $admin->id,
+                'name' => $admin->name,
+                'email' => $admin->email,
+            ];
+        })
+    ]);
+});

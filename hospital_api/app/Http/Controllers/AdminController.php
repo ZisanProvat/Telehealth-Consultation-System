@@ -283,4 +283,97 @@ class AdminController extends Controller
         }
         return response()->json(['message' => 'Appointment not found'], 404);
     }
+
+    // --- Payment Management ---
+    public function getPaymentHistory()
+    {
+        $payments = Appointment::whereNotNull('payment_status')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($appointment) {
+                $doctor = Doctor::find($appointment->doctor_id);
+                $patient = Patient::find($appointment->patient_id);
+                return [
+                    'id' => $appointment->id,
+                    'transaction_id' => $appointment->transaction_id,
+                    'patient_name' => $patient ? $patient->name : 'Unknown',
+                    'doctor_name' => $doctor ? $doctor->full_name : 'Unknown',
+                    'amount' => $appointment->amount,
+                    'payment_method' => $appointment->payment_method,
+                    'payment_status' => $appointment->payment_status,
+                    'date' => $appointment->appointment_date,
+                ];
+            });
+        return response()->json($payments, 200);
+    }
+
+    // --- Profile Management ---
+    public function updateProfile(Request $request)
+    {
+        // Get admin ID from request or use first admin as fallback
+        $adminId = $request->input('admin_id');
+        $admin = $adminId ? Admin::find($adminId) : Admin::first();
+
+        if (!$admin) {
+            return response()->json(['message' => 'Admin not found'], 404);
+        }
+
+        try {
+            $request->validate([
+                'name' => 'required|string',
+                'email' => 'required|email|unique:admins,email,' . $admin->id,
+            ]);
+
+            $admin->name = $request->name;
+            $admin->email = $request->email;
+
+            if ($request->hasFile('photo')) {
+                // Delete old photo
+                if ($admin->photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($admin->photo)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($admin->photo);
+                }
+                $path = $request->file('photo')->store('admin_photos', 'public');
+                $admin->photo = $path;
+            }
+
+            $admin->save();
+
+            return response()->json([
+                'message' => 'Profile updated successfully',
+                'user' => $admin
+            ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Update failed: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:6|confirmed',
+        ]);
+
+        // Get admin ID from request or use first admin as fallback
+        $adminId = $request->input('admin_id');
+        $admin = $adminId ? Admin::find($adminId) : Admin::first();
+
+        if (!$admin) {
+            return response()->json(['message' => 'Admin not found'], 404);
+        }
+
+        if (!Hash::check($request->current_password, $admin->password)) {
+            return response()->json(['message' => 'Incorrect current password'], 400);
+        }
+
+        $admin->password = Hash::make($request->new_password);
+        $admin->save();
+
+        return response()->json(['message' => 'Password changed successfully'], 200);
+    }
 }
