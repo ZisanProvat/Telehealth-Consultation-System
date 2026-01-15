@@ -1,0 +1,28 @@
+--- GLOBAL UNIQUE --- 
+scheduled: 3
+completed: 2
+cancelled: 0
+no-show: 0
+pending: 0
+all: 3
+
+--- SUM DOCTOR UNIQUE --- 
+scheduled: 10
+completed: 3
+cancelled: 0
+no-show: 0
+pending: 0
+all: 13
+
+--- SUM DOCTOR APPOINTMENT COUNT --- 
+scheduled: 11
+completed: 4
+cancelled: 0
+no-show: 0
+pending: 0
+all: 15
+
+--- REVENUE BASED --- 
+Sum-Earning-Doctor-Patients (Any Status): 10
+Sum-Earning-Doctor-Patients (Only Completed): 3
+Sum-Earning-Doctor-Patients (Non-Cancelled): 10

@@ -190,6 +190,12 @@ class AdminController extends Controller
             $doctor->visiting_days = $request->visiting_days;
             $doctor->visiting_hours = $request->visiting_hours;
             $doctor->fees = $request->fees;
+
+            if ($request->hasFile('photo')) {
+                $path = $request->file('photo')->store('doctors', 'public');
+                $doctor->photo = $path;
+            }
+
             $doctor->save();
 
             return response()->json(['message' => 'Doctor added successfully', 'doctor' => $doctor], 201);
@@ -220,6 +226,16 @@ class AdminController extends Controller
             $doctor->visiting_days = $request->visiting_days ?? $doctor->visiting_days;
             $doctor->visiting_hours = $request->visiting_hours ?? $doctor->visiting_hours;
             $doctor->fees = $request->fees ?? $doctor->fees;
+
+            if ($request->hasFile('photo')) {
+                // Delete old photo
+                if ($doctor->photo && \Illuminate\Support\Facades\Storage::disk('public')->exists($doctor->photo)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($doctor->photo);
+                }
+                $path = $request->file('photo')->store('doctors', 'public');
+                $doctor->photo = $path;
+            }
+
             $doctor->save();
 
             return response()->json(['message' => 'Doctor updated successfully', 'doctor' => $doctor], 200);

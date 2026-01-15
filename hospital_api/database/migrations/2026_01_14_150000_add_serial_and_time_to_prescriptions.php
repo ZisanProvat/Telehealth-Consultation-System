@@ -10,10 +10,9 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('patients', function (Blueprint $table) {
-            if (!Schema::hasColumn('patients', 'password')) {
-                $table->string('password')->after('uploaded_record');
-            }
+        Schema::table('prescriptions', function (Blueprint $table) {
+            $table->string('serial_number')->nullable()->after('appointment_date');
+            $table->string('appointment_time')->nullable()->after('serial_number');
         });
     }
 
@@ -22,8 +21,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('patients', function (Blueprint $table) {
-            $table->dropColumn('password');
+        Schema::table('prescriptions', function (Blueprint $table) {
+            $table->dropColumn(['serial_number', 'appointment_time']);
         });
     }
 };

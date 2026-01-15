@@ -1,0 +1,4 @@
+﻿Total Non-Cancelled Appointments: 15
+Global Unique Patients (Non-Cancelled): 3
+Sum of Doctor-level Unique Patients (Non-Cancelled): 13
+Total Unique Patients (Any Status): 3

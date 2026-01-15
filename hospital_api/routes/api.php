@@ -11,6 +11,7 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\SslCommerzPaymentController;
 use App\Http\Controllers\DoctorReportController;
+use App\Http\Controllers\PrescriptionController;
 use App\Models\User;
 use App\Models\Doctor;
 
@@ -85,6 +86,7 @@ Route::get('admin/reports/doctor/{doctorId}/monthly', [DoctorReportController::c
 Route::get('admin/reports/doctors/monthly', [DoctorReportController::class, 'getAllDoctorsReport']);
 Route::get('admin/reports/doctor/{doctorId}/yearly', [DoctorReportController::class, 'getYearlyReport']);
 Route::post('admin/reports/generate', [DoctorReportController::class, 'generateMonthlyReport']);
+Route::post('admin/reports/sync', [DoctorReportController::class, 'syncReports']);
 
 // Password Reset Routes
 Route::post('forgot-password', [PasswordResetController::class, 'sendResetLink']);
@@ -94,6 +96,12 @@ Route::post('reset-password', [PasswordResetController::class, 'reset']);
 Route::post('feedback', [FeedbackController::class, 'store']);
 Route::get('admin/feedback', [FeedbackController::class, 'index']);
 Route::delete('admin/feedback/{id}', [FeedbackController::class, 'destroy']);
+
+// Prescription Routes
+Route::post('prescriptions', [PrescriptionController::class, 'store']);
+Route::get('prescriptions/patient/{patientId}', [PrescriptionController::class, 'getPatientPrescriptions']);
+Route::get('prescriptions/doctor/{doctorId}', [PrescriptionController::class, 'getDoctorPrescriptions']);
+Route::get('prescriptions/appointment/{appointmentId}', [PrescriptionController::class, 'getByAppointment']);
 
 // SSLCommerz Routes
 Route::post('pay', [SslCommerzPaymentController::class, 'index']);
