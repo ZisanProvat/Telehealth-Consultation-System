@@ -10,7 +10,10 @@ class AppointmentController extends Controller
     // GET all appointments
     public function index()
     {
-        $appointments = Appointment::all();
+        $appointments = Appointment::with('doctor')
+            ->orderBy('appointment_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
 
         // Add calculated time slots to each appointment
         $appointments = $appointments->map(function ($appointment) {
@@ -29,7 +32,11 @@ class AppointmentController extends Controller
     // GET appointments for a specific patient
     public function getPatientAppointments($patientId)
     {
-        $appointments = Appointment::where('patient_id', $patientId)->get();
+        $appointments = Appointment::with('doctor')
+            ->where('patient_id', $patientId)
+            ->orderBy('appointment_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
 
         // Add calculated time slots to each appointment
         $appointments = $appointments->map(function ($appointment) {
@@ -50,6 +57,8 @@ class AppointmentController extends Controller
     {
         $appointments = Appointment::with('patient:id,uploaded_record')
             ->where('doctor_id', $doctorId)
+            ->orderBy('appointment_date', 'desc')
+            ->orderBy('id', 'desc')
             ->get();
 
         // Add calculated time slots to each appointment
@@ -73,10 +82,35 @@ class AppointmentController extends Controller
             $doctorId = $request->input('doctor_id');
             $date = $request->input('appointment_date');
 
-            // 1. Check existing appointments for this doctor on this date
             $existingCount = Appointment::where('doctor_id', $doctorId)
                 ->where('appointment_date', $date)
+                ->where('status', '!=', 'pending_payment')
                 ->count();
+
+            // 1.5 Check if THIS patient already has a pending appointment for this doctor/date
+            // If they do, we'll reuse it to avoid "unpaid" ghost records
+            $patientId = $request->input('patient_id');
+            $pendingAppointment = Appointment::where('doctor_id', $doctorId)
+                ->where('patient_id', $patientId)
+                ->where('appointment_date', $date)
+                ->where('status', 'pending_payment')
+                ->first();
+
+            if ($pendingAppointment) {
+                // Update and reuse the existing pending appointment
+                $pendingAppointment->reason = $request->input('reason');
+                $userNotes = $request->input('notes');
+                // Refresh video link
+                $uniqueRoomId = 'TeleHealth-' . uniqid() . '-' . $pendingAppointment->serial_number;
+                $videoLink = "https://meet.jit.si/" . $uniqueRoomId;
+                $pendingAppointment->notes = $videoLink . "\n\n" . ($userNotes ? "Patient Notes: " . $userNotes : "");
+                $pendingAppointment->save();
+
+                return response()->json([
+                    'message' => 'Continuing with existing pending appointment.',
+                    'data' => $pendingAppointment
+                ], 200);
+            }
 
             // 2. Enforce Dynamic Patient Limit based on Visiting Hours
             $doctor = \App\Models\Doctor::find($doctorId);

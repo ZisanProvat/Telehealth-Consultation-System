@@ -14,19 +14,30 @@ class PatientController extends Controller
     public function register(Request $req)
     {
         $req->validate([
-            'name' => 'required|string|regex:/^[A-Z]/',
+            'name' => 'required|string|regex:/^[a-zA-Z\s\.]+$/u',
             'phone' => 'required|digits:11',
             'email' => 'required|email',
             'address' => 'required|string',
-            'age' => 'required|numeric',
-            'height' => 'required|numeric',
-            'weight' => 'required|numeric',
+            'age' => 'required|numeric|min:0',
+            'height' => 'required|numeric|min:0',
+            'weight' => 'required|numeric|min:0',
             'blood_group' => 'required|string',
             'gender' => 'required|string',
-            'password' => 'required|min:6|confirmed',
+            'password' => [
+                'required',
+                'min:8',
+                'confirmed',
+                'regex:/[A-Z]/', // At least one uppercase
+                'regex:/[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]/' // At least one special char
+            ],
         ], [
-            'name.regex' => 'The name must start with a capital letter.',
+            'name.regex' => 'The name may only contain letters, spaces and dots.',
             'phone.digits' => 'The phone number must be exactly 11 digits.',
+            'password.regex' => 'The password must contain at least one uppercase letter and one special character.',
+            'password.min' => 'The password must be at least 8 characters.',
+            'age.min' => 'Age cannot be negative.',
+            'height.min' => 'Height cannot be negative.',
+            'weight.min' => 'Weight cannot be negative.',
         ]);
 
         // Check if email exists but is not verified
@@ -149,6 +160,18 @@ class PatientController extends Controller
     public function updateProfile(Request $request, $id)
     {
         try {
+            $request->validate([
+                'name' => 'sometimes|required|regex:/^[a-zA-Z\s\.]+$/u',
+                'age' => 'nullable|numeric|min:0',
+                'height' => 'nullable|numeric|min:0',
+                'weight' => 'nullable|numeric|min:0',
+            ], [
+                'name.regex' => 'The name may only contain letters, spaces and dots.',
+                'age.min' => 'Age cannot be negative.',
+                'height.min' => 'Height cannot be negative.',
+                'weight.min' => 'Weight cannot be negative.',
+            ]);
+
             $patient = Patient::findOrFail($id);
 
             if ($request->hasFile('photo')) {

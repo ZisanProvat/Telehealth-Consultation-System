@@ -60,6 +60,18 @@ class DoctorController extends Controller
     // POST store doctor
     public function store(Request $req)
     {
+        $req->validate([
+            'full_name' => 'required|regex:/^[a-zA-Z\s\.]+$/u',
+            'email' => 'required|email|unique:doctors',
+            'password' => 'required|min:6',
+            'fees' => 'nullable|numeric|min:0',
+            'experience' => 'nullable|numeric|min:0',
+        ], [
+            'full_name.regex' => 'The name may only contain letters, spaces and dots.',
+            'fees.min' => 'Consultation fees cannot be negative.',
+            'experience.min' => 'Experience cannot be negative.'
+        ]);
+
         $doctor = new Doctor;
 
         $doctor->user_id = $req->input('user_id'); // REQUIRED
@@ -127,6 +139,16 @@ class DoctorController extends Controller
     public function updateProfile(Request $request, $id)
     {
         try {
+            $request->validate([
+                'full_name' => 'sometimes|required|regex:/^[a-zA-Z\s\.]+$/u',
+                'fees' => 'nullable|numeric|min:0',
+                'experience' => 'nullable|numeric|min:0',
+            ], [
+                'full_name.regex' => 'The name may only contain letters, spaces and dots.',
+                'fees.min' => 'Consultation fees cannot be negative.',
+                'experience.min' => 'Experience cannot be negative.'
+            ]);
+
             $doctor = Doctor::findOrFail($id);
 
             if ($request->hasFile('photo')) {

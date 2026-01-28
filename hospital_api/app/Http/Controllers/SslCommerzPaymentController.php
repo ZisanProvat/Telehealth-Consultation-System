@@ -41,7 +41,9 @@ class SslCommerzPaymentController extends Controller
                 ->customer($appointment->patient_name, $email, $address, $phone);
 
             // Fetch the payment result
+            Log::info('Initiating SSLCommerz for Tran ID: ' . $tran_id);
             $paymentResponse = $sslc->make_payment();
+            Log::info('SSLCommerz Response: ', is_array($paymentResponse) ? $paymentResponse : ['response' => $paymentResponse]);
 
             // If it's an axios/ajax request, we need to return the URL as JSON
             if ($request->wantsJson() || $request->ajax()) {

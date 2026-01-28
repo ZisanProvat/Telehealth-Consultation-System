@@ -21,8 +21,6 @@ class PrescriptionController extends Controller
             'doctor_name' => 'required|string',
             'patient_name' => 'required|string',
             'appointment_date' => 'required|string',
-            'serial_number' => 'nullable|string',
-            'appointment_time' => 'nullable|string',
             'prescription_content' => 'required|string',
         ]);
 

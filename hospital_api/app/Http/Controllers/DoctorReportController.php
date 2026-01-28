@@ -171,10 +171,13 @@ class DoctorReportController extends Controller
             'data' => $reports,
             'summary' => [
                 'total_revenue' => $totalSystemRevenue,
-                'total_patients' => Patient::count(),
+                'total_patients' => $allAppointments->filter(function ($apt) {
+                    $status = strtolower($apt->status);
+                    return $status !== 'cancelled' && $status !== 'no-show';
+                })->pluck('patient_id')->unique()->count(),
                 'total_appointments' => $totalSystemAppointments,
                 'completion_rate' => $systemCompletionRate,
-                'active_doctors' => $doctors->count()
+                'active_doctors' => $allAppointments->pluck('doctor_id')->unique()->count()
             ],
             'period' => [
                 'start' => $startDate->toDateString(),

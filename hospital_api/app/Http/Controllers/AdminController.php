@@ -90,9 +90,17 @@ class AdminController extends Controller
     {
         try {
             $request->validate([
-                'name' => 'required',
+                'name' => 'required|regex:/^[a-zA-Z\s\.]+$/u',
                 'email' => 'required|email|unique:patients',
                 'password' => 'required|min:6',
+                'age' => 'nullable|numeric|min:0',
+                'weight' => 'nullable|numeric|min:0',
+                'height' => 'nullable|numeric|min:0',
+            ], [
+                'name.regex' => 'The name may only contain letters, spaces and dots.',
+                'age.min' => 'Age cannot be negative.',
+                'weight.min' => 'Weight cannot be negative.',
+                'height.min' => 'Height cannot be negative.'
             ]);
 
             $patient = new Patient();
@@ -127,10 +135,20 @@ class AdminController extends Controller
     public function updatePatient(Request $request, $id)
     {
         try {
+            $request->validate([
+                'name' => 'sometimes|required|regex:/^[a-zA-Z\s\.]+$/u',
+                'email' => 'sometimes|required|email|unique:patients,email,' . $id,
+                'age' => 'nullable|numeric|min:0',
+                'weight' => 'nullable|numeric|min:0',
+                'height' => 'nullable|numeric|min:0',
+            ], [
+                'name.regex' => 'The name may only contain letters, spaces and dots.',
+                'age.min' => 'Age cannot be negative.',
+                'weight.min' => 'Weight cannot be negative.',
+                'height.min' => 'Height cannot be negative.'
+            ]);
+
             $patient = Patient::find($id);
-            if (!$patient) {
-                return response()->json(['message' => 'Patient not found'], 404);
-            }
 
             $patient->name = $request->name ?? $patient->name;
             $patient->email = $request->email ?? $patient->email;
@@ -172,9 +190,15 @@ class AdminController extends Controller
     {
         try {
             $request->validate([
-                'full_name' => 'required',
+                'full_name' => 'required|regex:/^[a-zA-Z\s\.]+$/u',
                 'email' => 'required|email|unique:doctors',
                 'password' => 'required|min:6',
+                'fees' => 'nullable|numeric|min:0',
+                'experience' => 'nullable|numeric|min:0',
+            ], [
+                'full_name.regex' => 'The name may only contain letters, spaces and dots.',
+                'fees.min' => 'Consultation fees cannot be negative.',
+                'experience.min' => 'Experience cannot be negative.'
             ]);
 
             $doctor = new Doctor();
@@ -190,6 +214,8 @@ class AdminController extends Controller
             $doctor->visiting_days = $request->visiting_days;
             $doctor->visiting_hours = $request->visiting_hours;
             $doctor->fees = $request->fees;
+            $doctor->affiliated_clinic = $request->affiliated_clinic;
+            $doctor->description = $request->description;
 
             if ($request->hasFile('photo')) {
                 $path = $request->file('photo')->store('doctors', 'public');
@@ -207,6 +233,16 @@ class AdminController extends Controller
     public function updateDoctor(Request $request, $id)
     {
         try {
+            $request->validate([
+                'full_name' => 'sometimes|required|regex:/^[a-zA-Z\s\.]+$/u',
+                'fees' => 'nullable|numeric|min:0',
+                'experience' => 'nullable|numeric|min:0',
+            ], [
+                'full_name.regex' => 'The name may only contain letters, spaces and dots.',
+                'fees.min' => 'Consultation fees cannot be negative.',
+                'experience.min' => 'Experience cannot be negative.'
+            ]);
+
             $doctor = Doctor::find($id);
             if (!$doctor) {
                 return response()->json(['message' => 'Doctor not found'], 404);
@@ -226,6 +262,8 @@ class AdminController extends Controller
             $doctor->visiting_days = $request->visiting_days ?? $doctor->visiting_days;
             $doctor->visiting_hours = $request->visiting_hours ?? $doctor->visiting_hours;
             $doctor->fees = $request->fees ?? $doctor->fees;
+            $doctor->affiliated_clinic = $request->affiliated_clinic ?? $doctor->affiliated_clinic;
+            $doctor->description = $request->description ?? $doctor->description;
 
             if ($request->hasFile('photo')) {
                 // Delete old photo
@@ -312,12 +350,15 @@ class AdminController extends Controller
                 return [
                     'id' => $appointment->id,
                     'transaction_id' => $appointment->transaction_id,
+                    'patient_id' => $appointment->patient_id,
+                    'doctor_id' => $appointment->doctor_id,
                     'patient_name' => $patient ? $patient->name : 'Unknown',
                     'doctor_name' => $doctor ? $doctor->full_name : 'Unknown',
                     'amount' => $appointment->amount,
                     'payment_method' => $appointment->payment_method,
                     'payment_status' => $appointment->payment_status,
-                    'date' => $appointment->appointment_date,
+                    'appointment_date' => $appointment->appointment_date,
+                    'payment_date' => $appointment->created_at,
                 ];
             });
         return response()->json($payments, 200);
@@ -336,8 +377,10 @@ class AdminController extends Controller
 
         try {
             $request->validate([
-                'name' => 'required|string',
+                'name' => 'required|string|regex:/^[a-zA-Z\s\.]+$/u',
                 'email' => 'required|email|unique:admins,email,' . $admin->id,
+            ], [
+                'name.regex' => 'The name may only contain letters, spaces and dots.'
             ]);
 
             $admin->name = $request->name;
