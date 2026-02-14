@@ -1,0 +1,196 @@
+<?php
+namespace App\Http\Controllers;
+
+use App\Models\Doctor;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class DoctorController extends Controller
+{
+    // GET doctors
+    public function index()
+    {
+        $doctors = Doctor::all();
+
+        // Map database fields to frontend expected fields
+        return $doctors->map(function ($doctor) {
+            return [
+                'id' => $doctor->id,
+                'name' => $doctor->full_name,
+                'specialist' => $doctor->specialization,
+                'photo' => $doctor->photo,
+                'email' => $doctor->email,
+                'phone' => $doctor->phone,
+                'designation' => $doctor->designation,
+                'qualification' => $doctor->qualification,
+                'experience' => $doctor->experience,
+                'bmdc_no' => $doctor->bmdc_no,
+                'visiting_hours' => $doctor->visiting_hours,
+                'visiting_days' => $doctor->visiting_days,
+                'affiliated_clinic' => $doctor->affiliated_clinic,
+                'description' => $doctor->description,
+                'fees' => $doctor->fees,
+            ];
+        });
+    }
+    // GET single doctor by ID
+    public function show($id)
+    {
+        $doctor = Doctor::findOrFail($id);
+
+        // Map database fields to frontend expected fields
+        return [
+            'id' => $doctor->id,
+            'name' => $doctor->full_name,
+            'specialist' => $doctor->specialization,
+            'photo' => $doctor->photo,
+            'email' => $doctor->email,
+            'phone' => $doctor->phone,
+            'designation' => $doctor->designation,
+            'qualification' => $doctor->qualification,
+            'experience' => $doctor->experience,
+            'bmdc_no' => $doctor->bmdc_no,
+            'visiting_hours' => $doctor->visiting_hours,
+            'visiting_days' => $doctor->visiting_days,
+            'affiliated_clinic' => $doctor->affiliated_clinic,
+            'description' => $doctor->description,
+            'fees' => $doctor->fees,
+        ];
+    }
+    // POST store doctor
+    public function store(Request $req)
+    {
+        $req->validate([
+            'full_name' => 'required|regex:/^[a-zA-Z\s\.]+$/u',
+            'email' => 'required|email|unique:doctors',
+            'password' => 'required|min:6',
+            'fees' => 'nullable|numeric|min:0',
+            'experience' => 'nullable|numeric|min:0',
+        ], [
+            'full_name.regex' => 'The name may only contain letters, spaces and dots.',
+            'fees.min' => 'Consultation fees cannot be negative.',
+            'experience.min' => 'Experience cannot be negative.'
+        ]);
+
+        $doctor = new Doctor;
+
+        $doctor->user_id = $req->input('user_id'); // REQUIRED
+        $doctor->full_name = $req->input('full_name');
+        $doctor->email = $req->input('email');
+        $doctor->phone = $req->input('phone');
+        $doctor->designation = $req->input('designation');
+        $doctor->specialization = $req->input('specialization');
+        $doctor->qualification = $req->input('qualification');
+        $doctor->experience = $req->input('experience');
+        $doctor->bmdc_no = $req->input('bmdc_no');
+        $doctor->visiting_hours = $req->input('visiting_hours');
+        $doctor->visiting_days = $req->input('visiting_days');
+        $doctor->affiliated_clinic = $req->input('affiliated_clinic');
+        $doctor->description = $req->input('description');
+        $doctor->photo = $req->input('photo');
+        $doctor->fees = $req->input('fees');
+        $doctor->password = Hash::make($req->input('password'));
+
+        $doctor->save();
+
+        return response()->json([
+            'message' => 'Doctor created successfully',
+            'data' => $doctor
+        ], 201);
+    }
+
+    public function login(Request $req)
+    {
+        $doctor = Doctor::where('email', $req->input('email'))->first();
+        if (!$doctor || !Hash::check($req->input('password'), $doctor->password)) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
+        // Add role to doctor object
+        $doctor->role = 'doctor';
+
+        return response()->json([
+            'doctor' => $doctor,
+            'token' => 'doctor_token_' . $doctor->id,
+            'message' => 'Login successful'
+        ], 200);
+    }
+
+    public function updatePassword(Request $req)
+    {
+        try {
+            $doctor = Doctor::findOrFail($req->input('doctor_id'));
+
+            // Verify old password
+            if (!Hash::check($req->input('old_password'), $doctor->password)) {
+                return response()->json(['message' => 'Old password is incorrect'], 401);
+            }
+
+            // Update password
+            $doctor->password = Hash::make($req->input('new_password'));
+            $doctor->save();
+
+            return response()->json(['message' => 'Password updated successfully'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to update password'], 500);
+        }
+    }
+
+    public function updateProfile(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'full_name' => 'sometimes|required|regex:/^[a-zA-Z\s\.]+$/u',
+                'fees' => 'nullable|numeric|min:0',
+                'experience' => 'nullable|numeric|min:0',
+            ], [
+                'full_name.regex' => 'The name may only contain letters, spaces and dots.',
+                'fees.min' => 'Consultation fees cannot be negative.',
+                'experience.min' => 'Experience cannot be negative.'
+            ]);
+
+            $doctor = Doctor::findOrFail($id);
+
+            if ($request->hasFile('photo')) {
+                // Delete old photo if exists
+                if ($doctor->photo && \Storage::disk('public')->exists($doctor->photo)) {
+                    \Storage::disk('public')->delete($doctor->photo);
+                }
+                $path = $request->file('photo')->store('profile_photos', 'public');
+                $doctor->photo = $path;
+            }
+
+            $fields = [
+                'full_name',
+                'phone',
+                'email',
+                'designation',
+                'specialization',
+                'qualification',
+                'experience',
+                'bmdc_no',
+                'visiting_hours',
+                'visiting_days',
+                'affiliated_clinic',
+                'description',
+                'fees'
+            ];
+
+            foreach ($fields as $field) {
+                if ($request->has($field)) {
+                    $doctor->$field = $request->input($field);
+                }
+            }
+
+            $doctor->save();
+
+            return response()->json([
+                'message' => 'Profile updated successfully',
+                'doctor' => $doctor
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Update failed: ' . $e->getMessage()], 500);
+        }
+    }
+}

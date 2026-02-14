@@ -1,0 +1,16 @@
+Current Mailer: smtp
+Array
+(
+    [transport] => smtp
+    [scheme] => 
+    [url] => 
+    [host] => smtp.gmail.com
+    [port] => 465
+    [username] => agentprovatofficial127@gmail.com
+    [password] => jvpbghnjlgxgviuw
+    [timeout] => 
+    [encryption] => ssl
+    [local_domain] => localhost
+)
+Attempting to send test email to nahar.sabikunlima@gmail.com...
+Mail sent successfully (according to Laravel).
